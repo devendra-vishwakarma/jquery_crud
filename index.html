@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+                function preFillForm(userId) {
+                $.ajax({
+                    url: `https://66e7e954b17821a9d9da7f5e.mockapi.io/userClass/userClass/${userId}`, // Adjust the API endpoint as necessary
+                    type: 'GET',
+                    success: function (user) {
+                        $("#name").val(user.name);
+                        $("#email").val(user.email);
+                        $("#userId").val(userId); 
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching data:', error);
+                        alert('An error occurred while fetching data.');
+                    }
+                });
+            }
+
+            // Submit form data
+            $("#submit").click(function (e) {
+                e.preventDefault(); // Prevent default form submission
+
+                // Collect form data
+                let name = $("#name").val();
+                let email = $("#email").val();
+                // let userId = $("#userId").val(); // Get user ID from hidden input
+
+                // Log and alert the data
+                console.log(name, email);
+                alert("Name: " + name + "\nEmail: " + email);
+
+                // // Check and modify name value
+                // if (!name) {
+                //     name = "devendra";
+                // }
+
+                // Post data to the server
+                $.ajax({
+                    url: `https://66e7e954b17821a9d9da7f5e.mockapi.io/userClass/userClass`, // API endpoint for update
+                    type: 'POST', // Use PUT to update the resource
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        name: name,
+                        email: email
+                    }),
+                    success: function (response) {
+                        console.log('Data successfully updated:', response);
+                        alert('Data successfully updated!');
+                        // Clear the form fields after successful submission
+                        $("#name").val('');
+                        $("#email").val('');
+                        $("#userId").val(''); // Clear user ID
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                        alert('An error occurred while updating data.');
+                    }
+                });
+            });
+
+            // Fetch data from server when "Fetch Data" button is clicked
+            $(".fetchdata").click(function () {
+                $.ajax({
+                    url: 'https://66e7e954b17821a9d9da7f5e.mockapi.io/userClass/userClass', // API endpoint
+                    type: 'GET',
+                    success: function (data) {
+                        console.log('Fetched data:', data);
+
+                        // Create the table rows dynamically
+                        let tableRows = "";
+                        $.each(data, function (index, user) {
+                            tableRows += `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${user.name}</td>
+                                    <td>${user.email}</td>
+                                    <td><button class="deletebtn btn btn-danger" data-id="${user.id}">Delete</button></td>
+                                    <td><button class="updatebtn btn btn-success" data-id="${user.id}">Update</button></td>
+                                </tr>`;
+                        });
+
+                        // Insert the rows into the table body
+                        $("#dataTable tbody").html(tableRows); // Use .html() to replace old data
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching data:', error);
+                        alert('An error occurred while fetching data.');
+                    }
+                });
+            });
+
+            // Delegate event listener to the delete button
+            $(document).on('click', '.deletebtn', function () {
+                const userId = $(this).data('id'); // Get the user ID from data-id attribute
+
+                // Make a DELETE request to the server
+                $.ajax({
+                    url: `https://66e7e954b17821a9d9da7f5e.mockapi.io/userClass/userClass/${userId}`, // Delete endpoint
+                    type: 'DELETE',
+                    success: function (response) {
+                        alert('User successfully deleted!');
+                        console.log('Deleted user:', response);
+                        $(`button[data-id=${userId}]`).closest('tr').remove();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error deleting user:', error);
+                        alert('An error occurred while deleting the user.');
+                    }
+                });
+            });
+
+
+            $(document).on('click', '.updatebtn', function () {
+                const userId = $(this).data('id'); // Retrieve the data-id attribute value
+                // Pre-fill the form with the selected user's data
+                preFillForm(userId);
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id="classForm">
+        <form action="/action_page.php">
+            <input type="hidden" id="userId"> <!-- Hidden input to store user ID -->
+            <div class="mb-3 mt-3">
+                <label for="name" class="form-label">Name:</label>
+                <input type="text" id="name" placeholder="Name" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" id="email" placeholder="Email" class="form-control">
+            </div>
+            <button type="button" id="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <input class="form-control" id="myInput" type="text" placeholder="Search..">
+    <table id="dataTable" class="table table-hover">
+        <thead>
+            <tr>
+                <th>S.no</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+    <button class="btn btn-warning fetchdata">Fetch Data</button>
+
+</body>
+
+</html>
